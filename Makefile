@@ -1,28 +1,50 @@
-all: main clean-deps
+# A mettre a jour : répertoire d'installation de Google Test
+GTEST_DIR = ./googletest/googletest
+GTEST_LIB = ./googletest/lib
 
-CXX = clang++
-override CXXFLAGS += -g -Wno-everything
+all : main.out
 
-SRCS = $(shell find . -name '.ccls-cache' -type d -prune -o -type f -name '*.cpp' -print | sed -e 's/ /\\ /g')
-OBJS = $(SRCS:.cpp=.o)
-DEPS = $(SRCS:.cpp=.d)
+CPP_FLAGS = -isystem $(GTEST_DIR)/include  -g -Wall -Wextra -pthread -std=c++11
 
-%.d: %.cpp
-	@set -e; rm -f "$@"; \
-	$(CXX) -MM $(CXXFLAGS) "$<" > "$@.$$$$"; \
-	sed 's,\([^:]*\)\.o[ :]*,\1.o \1.d : ,g' < "$@.$$$$" > "$@"; \
-	rm -f "$@.$$$$"
+GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h \
+                $(GTEST_DIR)/include/gtest/internal/*.h
 
-%.o: %.cpp
-	$(CXX) $(CXXFLAGS) -c "$<" -o "$@"
+BateauTest.o: BateauTest.cpp Bateau.o
+	g++ -c $(CPP_FLAGS) BateauTest.cpp
 
-include $(DEPS)
+Bateau.o: Bateau.cpp Bateau.hpp
+	g++ -c $(CPP_FLAGS) Bateau.cpp
 
-main: $(OBJS)
-	$(CXX) $(CXXFLAGS) $(OBJS) -o "$@"
+BateauTest.out: BateauTest.o Bateau.o
+	g++ $(CPP_FLAGS) -o BateauTest.out BateauTest.o Bateau.o -lpthread $(GTEST_LIB)/libgtest.a $(GTEST_LIB)/libgtest_main.a
 
-clean:
-	rm -f $(OBJS) $(DEPS) main
 
-clean-deps:
-	rm -f $(DEPS)
+JoueurTest.o: JoueurTest.cpp Joueur.o
+	g++ -c $(CPP_FLAGS) JoueurTest.cpp
+
+Joueur.o: Joueur.cpp Joueur.hpp
+	g++ -c $(CPP_FLAGS) Joueur.cpp
+
+JoueurTest.out: JoueurTest.o Joueur.o
+	g++ $(CPP_FLAGS) -o JoueurTest.out JoueurTest.o Joueur.o -lpthread $(GTEST_LIB)/libgtest.a $(GTEST_LIB)/libgtest_main.a
+
+
+PartieTest.o: PartieTest.cpp Partie.o
+	g++ -c $(CPP_FLAGS) PartieTest.cpp
+
+Partie.o: Partie.cpp Partie.hpp
+	g++ -c $(CPP_FLAGS) Partie.cpp
+
+PartieTest.out: PartieTest.o Partie.o
+	g++ $(CPP_FLAGS) -o PartieTest.out PartieTest.o Plateau.o -lpthread $(GTEST_LIB)/libgtest.a $(GTEST_LIB)/libgtest_main.a
+
+
+main.o: main.cpp 
+	g++ -c $(CPP_FLAGS) main.cpp
+
+main.out: main.o Plateau.o Joueur.o Bateau.o
+	g++ $(CPP_FLAGS) -o main.out main.o Plateau.o Joueur.o Bateau.o -lpthread $(GTEST_LIB)/libgtest.a $(GTEST_LIB)/libgtest_main.a
+
+
+
+
